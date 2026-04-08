@@ -1,12 +1,16 @@
 "use client";
 
-import { Star, Check, Plus, PackageX, LayoutGrid, Box, Package, Utensils, Gift, Sparkles } from "lucide-react";
+import { Star, Check, Plus, PackageX, ArrowLeft, LayoutGrid, Box, Package, Utensils, Gift, Sparkles } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function ProductsSection() {
-  const [selectedCategory, setSelectedCategory] = useState("All Products");
+function ProductsContent() {
+  const searchParams = useSearchParams();
+  const collectionQuery = searchParams.get('collection');
+  
+  const [selectedCategory, setSelectedCategory] = useState(collectionQuery || "All Products");
   const [sortBy, setSortBy] = useState("featured");
   const [collections, setCollections] = useState([]);
   const [products, setProducts] = useState([]);
@@ -26,6 +30,12 @@ export default function ProductsSection() {
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (collectionQuery) {
+      setSelectedCategory(collectionQuery);
+    }
+  }, [collectionQuery]);
 
   // Map collection names to icons
   const getIconForCollection = (name: string) => {
@@ -57,15 +67,26 @@ export default function ProductsSection() {
   const categories = ["All Products", ...collections.map((c: any) => c.name)];
 
   return (
-    <section className="py-16 px-8 bg-[#F5EDE0]">
+    <section className="py-16 px-8 bg-[#F5EDE0] min-h-screen">
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
+        <Link 
+          href="/"
+          className="inline-flex items-center gap-2 mb-8 text-[#654321] hover:text-[#4A3219] transition-colors group"
+        >
+          <div className="w-10 h-10 rounded-full bg-white border-2 border-[#654321] flex items-center justify-center group-hover:bg-[#654321] group-hover:border-[#654321] transition-all">
+            <ArrowLeft className="w-5 h-5 group-hover:text-white transition-colors" />
+          </div>
+          <span className="font-semibold text-lg">Back to Home</span>
+        </Link>
+
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-black mb-3">
-            Our Premium Products
-          </h2>
+          <h1 className="text-5xl font-bold text-black mb-3">
+            All Products
+          </h1>
           <p className="text-gray-600">
-            Handcrafted with love, built to last a lifetime
+            Browse our complete collection of handcrafted wooden products
           </p>
         </div>
 
@@ -126,7 +147,7 @@ export default function ProductsSection() {
           </div>
         ) : (
           /* Product Cards Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {displayProducts.map((product: any) => (
               <div key={product._id} className="bg-white overflow-hidden group hover:shadow-2xl transition-shadow duration-300">
                 {/* Image Container */}
@@ -158,8 +179,7 @@ export default function ProductsSection() {
                         src={product.images[0]}
                         alt={product.title}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        loading="eager"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     ) : (
@@ -217,18 +237,19 @@ export default function ProductsSection() {
             ))}
           </div>
         )}
-
-        {/* View All Products Button */}
-        {!loading && displayProducts.length > 0 && (
-          <div className="text-center mt-12">
-            <Link href="/products">
-              <button className="bg-[#654321] text-white px-8 py-3 font-medium hover:bg-[#4A3219] transition">
-                View All Products
-              </button>
-            </Link>
-          </div>
-        )}
       </div>
     </section>
+  );
+}
+
+export default function AllProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F5EDE0] flex items-center justify-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-[#654321] border-t-transparent"></div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }

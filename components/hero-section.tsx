@@ -1,39 +1,25 @@
 "use client";
 
-import { Check, Star } from "lucide-react";
+import { Check } from "lucide-react";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
 export default function HeroSection() {
-  const bestsellers = [
-    {
-      id: 1,
-      name: "Best Office Deal 01 – Organize Your D...",
-      price: "5,400",
-      originalPrice: "6,750",
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 2,
-      name: "5 Watch Wooden Box with Acrylic Glass...",
-      price: "2,850",
-      originalPrice: "3,400",
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 3,
-      name: "10 Watch Wooden Box with Acrylic Glas...",
-      price: "3,500",
-      originalPrice: "4,400",
-      image: "/placeholder.jpg"
-    },
-    {
-      id: 4,
-      name: "Wooden Carved Adjustable Mobile Stand...",
-      price: "1,300",
-      originalPrice: "1,600",
-      image: "/placeholder.jpg"
-    }
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides = [
+    "https://pidocv4207.ufs.sh/f/gYC2yQmQ9rl44irOawCOQ3VNSWAT9KqE0Zfkvaur61wdFyUz",
+    "https://pidocv4207.ufs.sh/f/gYC2yQmQ9rl4eLRIFuCja8W5BZ1P0YsiTm46E3gwcdvbLeDA",
+    "https://pidocv4207.ufs.sh/f/gYC2yQmQ9rl4COyyNhWOIgZxQcempGH5Srz2KjwosyqNXPf4"
   ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [slides.length]);
 
   return (
     <div className="flex flex-col lg:flex-row">
@@ -93,58 +79,54 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Right Side - Bestsellers */}
-      <div className="w-full lg:w-1/2 bg-[#2A1500] px-6 py-12">
-        <h2 className="text-[#C4A574] text-sm font-medium tracking-wider mb-8 text-center">
-          BESTSELLING PRODUCTS
-        </h2>
-
-        <div className="space-y-4">
-          {bestsellers.slice(0, 3).map((product) => (
-            <div key={product.id} className="bg-[#3d2410] p-4 flex gap-4">
-              <div className="w-20 h-20 bg-gray-600 flex-shrink-0 flex items-center justify-center text-white text-xs">
-                Image
-              </div>
-              <div className="flex-1">
-                <h3 className="text-[#E5D4B8] text-sm font-medium mb-2 line-clamp-2">
-                  {product.name}
-                </h3>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#C4A574] font-bold">Rs.{product.price}</span>
-                  <span className="text-gray-500 text-sm line-through">Rs.{product.originalPrice}</span>
-                </div>
-                <span className="inline-block bg-red-600 text-white text-xs px-2 py-1 font-medium">
-                  Best Seller
-                </span>
-              </div>
+      {/* Right Side - Image Slider */}
+      <div className="w-full lg:w-1/2 bg-[#2A1500] relative overflow-hidden">
+        {/* Slider Images */}
+        <div className="relative h-full min-h-[500px] lg:min-h-[600px]">
+          {slides.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                index === currentSlide ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <Image
+                src={slide}
+                alt={`Wooden product ${index + 1}`}
+                fill
+                sizes="50vw"
+                className="object-cover"
+                priority={index === 0}
+              />
             </div>
           ))}
 
-          {/* Last Product with Rating */}
-          <div className="bg-[#3d2410] p-4 flex gap-4">
-            <div className="w-20 h-20 bg-gray-600 flex-shrink-0 flex items-center justify-center text-white text-xs">
-              Image
-            </div>
-            <div className="flex-1">
-              <h3 className="text-[#E5D4B8] text-sm font-medium mb-2 line-clamp-2">
-                {bestsellers[3].name}
-              </h3>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[#C4A574] font-bold">Rs.{bestsellers[3].price}</span>
-                <span className="text-gray-500 text-sm line-through">Rs.{bestsellers[3].originalPrice}</span>
-              </div>
-              <div className="bg-white p-3 mt-2">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <span className="font-bold text-black text-sm">4.8 / 5.0</span>
-                </div>
-                <p className="text-xs text-gray-600">500+ verified reviews</p>
-              </div>
-            </div>
+          {/* Overlay Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#2A1500]/80 via-transparent to-transparent" />
+        </div>
+
+        {/* Dots Navigation */}
+        <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-3 z-10">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`transition-all duration-300 ${
+                index === currentSlide
+                  ? 'w-12 h-3 bg-[#C4A574]'
+                  : 'w-3 h-3 bg-white/50 hover:bg-white/80'
+              } rounded-full`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Product Showcase Label */}
+        <div className="absolute top-8 left-8 right-8 z-10">
+          <div className="bg-black/50 backdrop-blur-sm px-6 py-3 inline-block">
+            <p className="text-[#C4A574] text-sm font-medium tracking-wider">
+              HANDCRAFTED EXCELLENCE
+            </p>
           </div>
         </div>
       </div>
