@@ -39,10 +39,11 @@ function ProductsContent() {
   useEffect(() => {
     if (collectionQuery) {
       setSelectedCategory(collectionQuery);
+    } else {
+      setSelectedCategory("All Products");
     }
   }, [collectionQuery]);
 
-  // Map collection names to icons
   const getIconForCollection = (name: string) => {
     if (name === "All Products") return LayoutGrid;
     const lowerName = name.toLowerCase();
@@ -52,6 +53,12 @@ function ProductsContent() {
     if (lowerName.includes('gift')) return Gift;
     return Sparkles;
   };
+
+  useEffect(() => {
+    if (searchQuery) {
+      setSearchInput(searchQuery);
+    }
+  }, [searchQuery]);
 
   useEffect(() => {
     if (searchQuery) {
