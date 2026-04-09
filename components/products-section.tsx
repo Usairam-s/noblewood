@@ -4,6 +4,8 @@ import { Star, Check, Plus, PackageX, LayoutGrid, Box, Package, Utensils, Gift, 
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useCart } from "@/lib/contexts/CartContext";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function ProductsSection() {
   const [selectedCategory, setSelectedCategory] = useState("All Products");
@@ -11,6 +13,7 @@ export default function ProductsSection() {
   const [collections, setCollections] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     // Fetch collections
@@ -26,6 +29,13 @@ export default function ProductsSection() {
         setLoading(false);
       });
   }, []);
+
+  const handleAddToCart = (e: React.MouseEvent, product: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
+    toast.success('Added to cart!');
+  };
 
   // Map collection names to icons
   const getIconForCollection = (name: string) => {
@@ -58,6 +68,7 @@ export default function ProductsSection() {
 
   return (
     <section className="py-16 px-8 bg-[#F5EDE0]">
+      <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -128,7 +139,11 @@ export default function ProductsSection() {
           /* Product Cards Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {displayProducts.map((product: any) => (
-              <div key={product._id} className="bg-white overflow-hidden group hover:shadow-2xl transition-shadow duration-300">
+              <Link 
+                key={product._id} 
+                href={`/product/${product._id}`}
+                className="bg-white overflow-hidden group hover:shadow-2xl transition-shadow duration-300 block"
+              >
                 {/* Image Container */}
                 <div className="relative overflow-hidden">
                   {/* Tag Badge */}
@@ -207,13 +222,16 @@ export default function ProductsSection() {
                         )}
                       </div>
                     </div>
-                    <button className="bg-black text-white px-6 py-3 font-medium hover:bg-[#654321] transition-colors flex items-center gap-2">
+                    <button 
+                      onClick={(e) => handleAddToCart(e, product)}
+                      className="bg-black text-white px-6 py-3 font-medium hover:bg-[#654321] transition-colors flex items-center gap-2 cursor-pointer"
+                    >
                       Add
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

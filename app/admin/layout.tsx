@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Package, Lock, FolderOpen, ShoppingBag } from "lucide-react";
+import { Package, Lock, FolderOpen, ShoppingBag, ClipboardList } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -118,6 +118,11 @@ export default function AdminLayout({
       name: "Collections",
       href: "/admin/collections",
       icon: FolderOpen,
+    },
+    {
+      name: "Orders",
+      href: "/admin/orders",
+      icon: ClipboardList,
     },
   ];
 

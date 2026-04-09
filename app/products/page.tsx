@@ -5,16 +5,21 @@ import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useCart } from "@/lib/contexts/CartContext";
+import toast, { Toaster } from 'react-hot-toast';
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const collectionQuery = searchParams.get('collection');
+  const searchQuery = searchParams.get('search');
   
   const [selectedCategory, setSelectedCategory] = useState(collectionQuery || "All Products");
   const [sortBy, setSortBy] = useState("featured");
+  const [searchInput, setSearchInput] = useState(searchQuery || "");
   const [collections, setCollections] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     // Fetch collections
@@ -48,11 +53,33 @@ function ProductsContent() {
     return Sparkles;
   };
 
+  useEffect(() => {
+    if (searchQuery) {
+      setSearchInput(searchQuery);
+    }
+  }, [searchQuery]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      window.location.href = `/products?search=${encodeURIComponent(searchInput.trim())}`;
+    } else {
+      window.location.href = '/products';
+    }
+  };
+
   // Filter products by category
-  const filteredProducts = products.filter((product: any) => {
+  let filteredProducts = products.filter((product: any) => {
     if (selectedCategory === "All Products") return true;
     return product.collection?.name === selectedCategory;
   });
+
+  // Filter by search query if present
+  if (searchQuery) {
+    filteredProducts = filteredProducts.filter((product: any) => 
+      product.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
 
   // Filter products by tag for sort
   const sortedProducts = [...filteredProducts].filter((product: any) => {
@@ -64,10 +91,18 @@ function ProductsContent() {
 
   const displayProducts = sortedProducts.length > 0 ? sortedProducts : filteredProducts;
 
+  const handleAddToCart = (e: React.MouseEvent, product: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
+    toast.success('Added to cart!');
+  };
+
   const categories = ["All Products", ...collections.map((c: any) => c.name)];
 
   return (
     <section className="py-16 px-8 bg-[#F5EDE0] min-h-screen">
+      <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <Link 
@@ -83,11 +118,41 @@ function ProductsContent() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-black mb-3">
-            All Products
+            {searchQuery ? `Search Results for "${searchQuery}"` : 'All Products'}
           </h1>
           <p className="text-gray-600">
-            Browse our complete collection of handcrafted wooden products
+            {searchQuery 
+              ? `Found ${displayProducts.length} product(s) matching your search`
+              : 'Browse our complete collection of handcrafted wooden products'
+            }
           </p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mb-8">
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search products by name... (Press Enter)"
+                className="w-full px-6 py-4 text-lg border-2 border-[#654321] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#654321] focus:border-transparent"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput("");
+                    window.location.href = '/products';
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </form>
         </div>
 
         {/* Filters */}
@@ -140,16 +205,30 @@ function ProductsContent() {
             <PackageX className="w-24 h-24 text-gray-400 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-gray-700 mb-2">No Products Found</h3>
             <p className="text-gray-500">
-              {sortBy !== "featured" 
-                ? `No ${sortBy === "bestsellers" ? "best seller" : sortBy} products available in this category.`
-                : `No products available in this category yet.`}
+              {searchQuery 
+                ? `No products found matching "${searchQuery}". Try a different search term.`
+                : sortBy !== "featured" 
+                  ? `No ${sortBy === "bestsellers" ? "best seller" : sortBy} products available in this category.`
+                  : `No products available in this category yet.`
+              }
             </p>
+            {searchQuery && (
+              <Link href="/products" className="mt-4 inline-block">
+                <button className="px-6 py-3 bg-[#654321] text-white font-medium rounded-lg hover:bg-[#4A3219] transition-colors">
+                  View All Products
+                </button>
+              </Link>
+            )}
           </div>
         ) : (
           /* Product Cards Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {displayProducts.map((product: any) => (
-              <div key={product._id} className="bg-white overflow-hidden group hover:shadow-2xl transition-shadow duration-300">
+              <Link 
+                key={product._id} 
+                href={`/product/${product._id}`}
+                className="bg-white overflow-hidden group hover:shadow-2xl transition-shadow duration-300 block"
+              >
                 {/* Image Container */}
                 <div className="relative overflow-hidden">
                   {/* Tag Badge */}
@@ -227,13 +306,16 @@ function ProductsContent() {
                         )}
                       </div>
                     </div>
-                    <button className="bg-black text-white px-6 py-3 font-medium hover:bg-[#654321] transition-colors flex items-center gap-2">
+                    <button 
+                      onClick={(e) => handleAddToCart(e, product)}
+                      className="bg-black text-white px-6 py-3 font-medium hover:bg-[#654321] transition-colors flex items-center gap-2 cursor-pointer"
+                    >
                       Add
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
