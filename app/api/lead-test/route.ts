@@ -23,13 +23,32 @@ export async function GET() {
       body: soapRequest,
     });
 
-    const data = await response.text();
+    const xmlText = await response.text();
     
-    return NextResponse.json({
-      status: response.status,
-      statusText: response.statusText,
-      data: data,
-    });
+    const leadMatches = xmlText.matchAll(/<Lead[^>]*Id="(\d+)"[^>]*>([\s\S]*?)<\/Lead>/g);
+    const leads = [];
+    
+    for (const leadMatch of leadMatches) {
+      const leadId = leadMatch[1];
+      const leadContent = leadMatch[2];
+      
+      const fields: Record<string, string> = {};
+      const fieldMatches = leadContent.matchAll(/<Field FieldId="(\d+)" Value="([^"]*)"[^>]*\/>/g);
+      
+      for (const fieldMatch of fieldMatches) {
+        fields[fieldMatch[1]] = fieldMatch[2];
+      }
+      
+      leads.push({
+        id: leadId,
+        firstName: fields['4'] || '',
+        lastName: fields['5'] || '',
+        fullName: fields['108'] || '',
+        phone: fields['80'] || '',
+      });
+    }
+    
+    return NextResponse.json({ leads: leads.slice(0, 10) });
   } catch (error) {
     return NextResponse.json(
       { error: String(error) },
